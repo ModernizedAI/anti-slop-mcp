@@ -1,21 +1,23 @@
 # Anti-Slop MCP Server
 
-A Model Context Protocol (MCP) compliant FastAPI service for detecting and rewriting low-quality or repetitive AI-generated content ("slop").
+A Model Context Protocol (MCP) compliant FastAPI service for detecting and rewriting low-quality or
+repetitive AI-generated content ("slop").
 
 ## Features
 
-- **Analyze Content**: Score text quality and identify specific issues with generic or verbose AI output
+- **Analyze Content**: Score text quality and identify specific issues with generic or verbose AI
+  output
 - **Improve Content**: Automatically rewrite text to remove fluff and improve clarity
 - **Detect AI Phrases**: Flag obvious AI-generated phrases like "delve into", "it's worth noting"
-- **Remove Filler Words**: Strip unnecessary words like "actually", "basically", "literally"
+- **Remove Filler Words**: Strip unnecessary words like "", "", ""
 - **Detect Clichés**: Find overused corporate buzzwords and tired expressions
-- **Remove Hedging**: Eliminate weak language like "perhaps", "maybe", "might"
+- **Remove Hedging**: Eliminate weak language like "", "", ""
 - **Detect Passive Voice**: Identify and count passive voice usage
 - **Normalize Whitespace**: Clean up formatting inconsistencies
 - **Calculate Readability**: Get Flesch reading ease scores and grade levels
 - **Detect Repetition**: Find repeated phrases within text
 - **Detect Run-on Sentences**: Flag overly long sentences
-- **Remove Redundancies**: Fix redundant phrases like "past history", "future plans"
+- **Remove Redundancies**: Fix redundant phrases like "history", "plans"
 - **MCP Compliant**: Follows the Model Context Protocol for easy integration with AI agents
 
 ## Installation
@@ -23,7 +25,7 @@ A Model Context Protocol (MCP) compliant FastAPI service for detecting and rewri
 ```bash
 cd anti-slop-mcp
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -52,6 +54,7 @@ The server will start on port 3000 (or the port specified in the `PORT` environm
 ## API Documentation
 
 Once the server is running, visit:
+
 - Swagger UI: `http://localhost:3000/docs`
 - ReDoc: `http://localhost:3000/redoc`
 
@@ -62,6 +65,7 @@ Once the server is running, visit:
 **Endpoint**: `POST /analyze_content_for_slop`
 
 **Request Body**:
+
 ```json
 {
   "content": "Your text to analyze here..."
@@ -69,19 +73,14 @@ Once the server is running, visit:
 ```
 
 **Response**:
+
 ```json
 {
   "content": "Original text...",
   "analysis": {
     "score": 7,
-    "issues": [
-      "Excessive use of qualifiers",
-      "Generic opening statements"
-    ],
-    "suggestions": [
-      "Remove phrases like 'it's worth noting'",
-      "Be more specific in your claims"
-    ]
+    "issues": ["Excessive use of qualifiers", "Generic opening statements"],
+    "suggestions": ["Remove phrases like 'it's worth noting'", "Be more specific in your claims"]
   }
 }
 ```
@@ -99,6 +98,7 @@ Once the server is running, visit:
 **Endpoint**: `POST /detect_ai_phrases`
 
 **Response**:
+
 ```json
 {
   "content": "Original text...",
@@ -137,6 +137,7 @@ Once the server is running, visit:
 **Endpoint**: `POST /calculate_readability`
 
 **Response**:
+
 ```json
 {
   "stats": {
@@ -159,6 +160,7 @@ Once the server is running, visit:
 **Endpoint**: `POST /detect_repetition`
 
 **Request Body**:
+
 ```json
 {
   "content": "Your text...",
@@ -171,6 +173,7 @@ Once the server is running, visit:
 **Endpoint**: `POST /detect_run_on_sentences`
 
 **Request Body**:
+
 ```json
 {
   "content": "Your text...",
@@ -187,6 +190,7 @@ Once the server is running, visit:
 **Endpoint**: `POST /improve_content_from_slop`
 
 **Request Body**:
+
 ```json
 {
   "content": "Your text to improve here...",
@@ -202,18 +206,18 @@ Once the server is running, visit:
 ```bash
 # Detect AI phrases
 curl -X POST http://localhost:3000/detect_ai_phrases \
-  -H "Content-Type: application/json" \
-  -d '{"content": "It'\''s worth noting that we need to delve into this robust solution"}'
+ -H "Content-Type: application/json" \
+ -d '{"content": "It'\''s worth noting that we need to delve into this robust solution"}'
 
 # Calculate readability
 curl -X POST http://localhost:3000/calculate_readability \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Your content here..."}'
+ -H "Content-Type: application/json" \
+ -d '{"content": "Your content here..."}'
 
 # Improve content
 curl -X POST http://localhost:3000/improve_content_from_slop \
-  -H "Content-Type: application/json" \
-  -d '{"content": "It'\''s worth noting that...", "target_tone": "professional"}'
+ -H "Content-Type: application/json" \
+ -d '{"content": "It'\''s worth noting that...", "target_tone": "professional"}'
 ```
 
 ### Using Python
@@ -223,26 +227,26 @@ import requests
 
 # Detect AI phrases
 response = requests.post(
-    "http://localhost:3000/detect_ai_phrases",
-    json={"content": "It's worth noting that we should delve into this..."}
+ "http://localhost:3000/detect_ai_phrases",
+ json={"content": "It's worth noting that we should delve into this..."}
 )
 print(response.json())
 
 # Cleanup pipeline
 def cleanup_content(text):
-    # Remove filler words
-    r = requests.post("http://localhost:3000/remove_filler_words", json={"content": text})
-    text = r.json()["cleaned_content"]
-    
-    # Remove hedging
-    r = requests.post("http://localhost:3000/remove_hedging", json={"content": text})
-    text = r.json()["cleaned_content"]
-    
-    # Normalize whitespace
-    r = requests.post("http://localhost:3000/normalize_whitespace", json={"content": text})
-    text = r.json()["normalized_content"]
-    
-    return text
+ # Remove filler words
+ r = requests.post("http://localhost:3000/remove_filler_words", json={"content": text})
+ text = r.json()["cleaned_content"]
+
+ # Remove hedging
+ r = requests.post("http://localhost:3000/remove_hedging", json={"content": text})
+ text = r.json()["cleaned_content"]
+
+ # Normalize whitespace
+ r = requests.post("http://localhost:3000/normalize_whitespace", json={"content": text})
+ text = r.json()["normalized_content"]
+
+ return text
 ```
 
 ## ModernizedAI Integration
@@ -266,7 +270,7 @@ Create a connector definition for ModernizedAI:
       "name": "remove_filler_words",
       "endpoint": "/remove_filler_words",
       "method": "POST",
-      "description": "Remove filler words like 'actually', 'basically', 'literally'"
+      "description": "Remove filler words like '', '', ''"
     },
     {
       "name": "calculate_readability",
