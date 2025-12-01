@@ -9,15 +9,16 @@ repetitive AI-generated content ("slop").
   output
 - **Improve Content**: Automatically rewrite text to remove fluff and improve clarity
 - **Detect AI Phrases**: Flag obvious AI-generated phrases like "delve into", "it's worth noting"
-- **Remove Filler Words**: Strip unnecessary words like "", "", ""
+- **Remove Filler Words**: Strip unnecessary words like "actually", "basically", "literally"
 - **Detect Clichés**: Find overused corporate buzzwords and tired expressions
-- **Remove Hedging**: Eliminate weak language like "", "", ""
+- **Remove Hedging**: Eliminate weak language like "perhaps", "maybe", "might"
 - **Detect Passive Voice**: Identify and count passive voice usage
 - **Normalize Whitespace**: Clean up formatting inconsistencies
 - **Calculate Readability**: Get Flesch reading ease scores and grade levels
 - **Detect Repetition**: Find repeated phrases within text
 - **Detect Run-on Sentences**: Flag overly long sentences
-- **Remove Redundancies**: Fix redundant phrases like "history", "plans"
+- **Remove Redundancies**: Fix redundant phrases like "past history", "future plans"
+- **Format Python Code**: Auto-format Python code with proper indentation using black
 - **MCP Compliant**: Follows the Model Context Protocol for easy integration with AI agents
 
 ## Installation
@@ -185,7 +186,30 @@ Once the server is running, visit:
 
 **Endpoint**: `POST /remove_redundancies`
 
-### 14. Improve Content from Slop
+### 14. Format Python Code
+
+**Endpoint**: `POST /format_python`
+
+**Request Body**:
+
+```json
+{
+  "content": "def hello():\nprint('world')"
+}
+```
+
+**Response**:
+
+```json
+{
+  "original_content": "def hello():\nprint('world')",
+  "formatted_content": "def hello():\n    print('world')\n",
+  "changes_made": "Formatted with black (line length: 100)",
+  "formatter": "black"
+}
+```
+
+### 15. Improve Content from Slop
 
 **Endpoint**: `POST /improve_content_from_slop`
 
