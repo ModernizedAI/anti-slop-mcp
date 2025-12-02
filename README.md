@@ -1,344 +1,212 @@
 # Anti-Slop MCP Server
 
-A Model Context Protocol (MCP) compliant FastAPI service for detecting and rewriting low-quality or
-repetitive AI-generated content ("slop").
+A Model Context Protocol (MCP) server for detecting and rewriting low-quality or repetitive AI-generated content ("slop").
+
+## What is MCP?
+
+MCP (Model Context Protocol) is a standard protocol that allows AI assistants to connect to external tools and data sources. This server implements MCP to provide anti-slop tools that can be used by any MCP-compatible client (like Claude Desktop, IDEs, etc.).
 
 ## Features
 
-- **Analyze Content**: Score text quality and identify specific issues with generic or verbose AI
-  output
-- **Improve Content**: Automatically rewrite text to remove fluff and improve clarity
-- **Detect AI Phrases**: Flag obvious AI-generated phrases like "delve into", "it's worth noting"
-- **Remove Filler Words**: Strip unnecessary words like "actually", "basically", "literally"
+### Detection Tools
+- **Analyze Content**: Score text quality (0-10) and identify specific issues with generic or verbose AI output
+- **Detect AI Phrases**: Flag obvious AI-generated phrases like "delve into", "it's worth noting", "in today's world"
 - **Detect Clichés**: Find overused corporate buzzwords and tired expressions
-- **Remove Hedging**: Eliminate weak language like "perhaps", "maybe", "might"
 - **Detect Passive Voice**: Identify and count passive voice usage
-- **Normalize Whitespace**: Clean up formatting inconsistencies
-- **Calculate Readability**: Get Flesch reading ease scores and grade levels
 - **Detect Repetition**: Find repeated phrases within text
 - **Detect Run-on Sentences**: Flag overly long sentences
+
+### Cleaning Tools
+- **Remove Filler Words**: Strip unnecessary words like "actually", "basically", "literally"
+- **Remove Hedging**: Eliminate weak language like "perhaps", "maybe", "might"
 - **Remove Redundancies**: Fix redundant phrases like "past history", "future plans"
-- **Format Python Code**: Auto-format Python code with proper indentation using black
-- **MCP Compliant**: Follows the Model Context Protocol for easy integration with AI agents
+- **Remove Emojis**: Clean emojis from text
+- **Normalize Whitespace**: Clean up formatting inconsistencies
+
+### Analysis Tools
+- **Calculate Readability**: Get Flesch reading ease scores and grade levels
+
+### AI-Powered Tools
+- **Improve Content**: Automatically rewrite text to remove slop and improve clarity (requires OpenAI API key)
 
 ## Installation
 
 ```bash
 cd anti-slop-mcp
 python -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e .
+```
+
+For development with additional tools:
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Configuration
 
-Set your OpenAI API key as an environment variable:
+For AI-powered tools (analyze_content_for_slop, improve_content_from_slop), set your OpenAI API key:
 
 ```bash
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
-## Running the Server
+## Using with Claude Desktop
+
+Add this to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "anti-slop": {
+      "command": "python",
+      "args": ["/path/to/anti-slop-mcp/server.py"],
+      "env": {
+        "OPENAI_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop and the anti-slop tools will be available!
+
+## Using with Other MCP Clients
+
+The server uses stdio transport and follows the MCP specification. Connect to it by running:
 
 ```bash
 python server.py
 ```
 
-Or with uvicorn directly:
+Then communicate via JSON-RPC 2.0 messages over stdin/stdout.
+
+## Available Tools
+
+### 1. detect_ai_phrases
+Detect common AI-generated phrases.
+
+**Input:**
+- `content` (string): Text to scan
+
+**Example:**
+```json
+{
+  "content": "Let me delve into this topic. It's worth noting that..."
+}
+```
+
+### 2. remove_filler_words
+Remove filler words to make text more concise.
+
+**Input:**
+- `content` (string): Text to clean
+
+### 3. detect_cliches
+Find business clichés and buzzwords.
+
+**Input:**
+- `content` (string): Text to scan
+
+### 4. remove_hedging
+Remove hedging language to make text more direct.
+
+**Input:**
+- `content` (string): Text to clean
+
+### 5. detect_passive_voice
+Analyze passive voice usage.
+
+**Input:**
+- `content` (string): Text to analyze
+
+### 6. calculate_readability
+Calculate readability metrics (Flesch score, grade level).
+
+**Input:**
+- `content` (string): Text to analyze
+
+### 7. detect_repetition
+Find repeated phrases.
+
+**Input:**
+- `content` (string): Text to scan
+- `min_length` (integer, optional): Minimum phrase length (default: 3)
+
+### 8. detect_run_on_sentences
+Detect overly long sentences.
+
+**Input:**
+- `content` (string): Text to analyze
+- `max_words` (integer, optional): Maximum words per sentence (default: 30)
+
+### 9. remove_redundancies
+Remove redundant phrases.
+
+**Input:**
+- `content` (string): Text to clean
+
+### 10. remove_emojis
+Remove all emojis from text.
+
+**Input:**
+- `content` (string): Text to clean
+
+### 11. normalize_whitespace
+Normalize whitespace and formatting.
+
+**Input:**
+- `content` (string): Text to normalize
+
+### 12. analyze_content_for_slop ⚡ (Requires OpenAI API Key)
+Analyze text for slop using AI.
+
+**Input:**
+- `content` (string): Text to analyze
+
+### 13. improve_content_from_slop ⚡ (Requires OpenAI API Key)
+Rewrite text to remove slop using AI.
+
+**Input:**
+- `content` (string): Text to improve
+- `preserve_meaning` (boolean, optional): Preserve original meaning (default: true)
+- `target_tone` (string, optional): Target tone (default: "professional")
+
+## Testing the Server
+
+Test with JSON-RPC messages:
 
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 3000 --reload
-```
-
-The server will start on port 3000 (or the port specified in the `PORT` environment variable).
-
-## API Documentation
-
-Once the server is running, visit:
-
-- Swagger UI: `http://localhost:3000/docs`
-- ReDoc: `http://localhost:3000/redoc`
-
-## API Endpoints
-
-### 1. Analyze Content for Slop
-
-**Endpoint**: `POST /analyze_content_for_slop`
-
-**Request Body**:
-
-```json
-{
-  "content": "Your text to analyze here..."
-}
-```
-
-**Response**:
-
-```json
-{
-  "content": "Original text...",
-  "analysis": {
-    "score": 7,
-    "issues": ["Excessive use of qualifiers", "Generic opening statements"],
-    "suggestions": ["Remove phrases like 'it's worth noting'", "Be more specific in your claims"]
-  }
-}
-```
-
-### 2. Remove Em Dashes
-
-**Endpoint**: `POST /remove_em_dashes`
-
-### 3. Remove Emojis
-
-**Endpoint**: `POST /remove_emojis`
-
-### 4. Detect AI Phrases
-
-**Endpoint**: `POST /detect_ai_phrases`
-
-**Response**:
-
-```json
-{
-  "content": "Original text...",
-  "ai_phrases_detected": 3,
-  "total_instances": 3,
-  "phrases": [
-    { "phrase": "it's worth noting", "count": 1, "instances": ["it's worth noting"] },
-    { "phrase": "delve into", "count": 1, "instances": ["delve into"] }
-  ],
-  "slop_score": 6
-}
-```
-
-### 5. Remove Filler Words
-
-**Endpoint**: `POST /remove_filler_words`
-
-### 6. Detect Clichés
-
-**Endpoint**: `POST /detect_cliches`
-
-### 7. Remove Hedging
-
-**Endpoint**: `POST /remove_hedging`
-
-### 8. Detect Passive Voice
-
-**Endpoint**: `POST /detect_passive_voice`
-
-### 9. Normalize Whitespace
-
-**Endpoint**: `POST /normalize_whitespace`
-
-### 10. Calculate Readability
-
-**Endpoint**: `POST /calculate_readability`
-
-**Response**:
-
-```json
-{
-  "stats": {
-    "sentences": 5,
-    "words": 87,
-    "syllables": 134,
-    "avg_sentence_length": 17.4,
-    "avg_syllables_per_word": 1.5
-  },
-  "readability": {
-    "flesch_reading_ease": 65,
-    "grade_level": 8.2,
-    "difficulty": "Standard"
-  }
-}
-```
-
-### 11. Detect Repetition
-
-**Endpoint**: `POST /detect_repetition`
-
-**Request Body**:
-
-```json
-{
-  "content": "Your text...",
-  "min_length": 3
-}
-```
-
-### 12. Detect Run-on Sentences
-
-**Endpoint**: `POST /detect_run_on_sentences`
-
-**Request Body**:
-
-```json
-{
-  "content": "Your text...",
-  "max_words": 30
-}
-```
-
-### 13. Remove Redundancies
-
-**Endpoint**: `POST /remove_redundancies`
-
-### 14. Format Python Code
-
-**Endpoint**: `POST /format_python`
-
-**Request Body**:
-
-```json
-{
-  "content": "def hello():\nprint('world')"
-}
-```
-
-**Response**:
-
-```json
-{
-  "original_content": "def hello():\nprint('world')",
-  "formatted_content": "def hello():\n    print('world')\n",
-  "changes_made": "Formatted with black (line length: 100)",
-  "formatter": "black"
-}
-```
-
-### 15. Improve Content from Slop
-
-**Endpoint**: `POST /improve_content_from_slop`
-
-**Request Body**:
-
-```json
-{
-  "content": "Your text to improve here...",
-  "preserve_meaning": true,
-  "target_tone": "professional"
-}
-```
-
-## Usage Examples
-
-### Using curl
-
-```bash
-# Detect AI phrases
-curl -X POST http://localhost:3000/detect_ai_phrases \
- -H "Content-Type: application/json" \
- -d '{"content": "It'\''s worth noting that we need to delve into this robust solution"}'
-
-# Calculate readability
-curl -X POST http://localhost:3000/calculate_readability \
- -H "Content-Type: application/json" \
- -d '{"content": "Your content here..."}'
-
-# Improve content
-curl -X POST http://localhost:3000/improve_content_from_slop \
- -H "Content-Type: application/json" \
- -d '{"content": "It'\''s worth noting that...", "target_tone": "professional"}'
-```
-
-### Using Python
-
-```python
-import requests
-
-# Detect AI phrases
-response = requests.post(
- "http://localhost:3000/detect_ai_phrases",
- json={"content": "It's worth noting that we should delve into this..."}
-)
-print(response.json())
-
-# Cleanup pipeline
-def cleanup_content(text):
- # Remove filler words
- r = requests.post("http://localhost:3000/remove_filler_words", json={"content": text})
- text = r.json()["cleaned_content"]
-
- # Remove hedging
- r = requests.post("http://localhost:3000/remove_hedging", json={"content": text})
- text = r.json()["cleaned_content"]
-
- # Normalize whitespace
- r = requests.post("http://localhost:3000/normalize_whitespace", json={"content": text})
- text = r.json()["normalized_content"]
-
- return text
-```
-
-## ModernizedAI Integration
-
-Create a connector definition for ModernizedAI:
-
-```json
-{
-  "id": "anti_slop",
-  "name": "Anti-Slop MCP",
-  "type": "mcp",
-  "base_url": "http://localhost:3000",
-  "tools": [
-    {
-      "name": "detect_ai_phrases",
-      "endpoint": "/detect_ai_phrases",
-      "method": "POST",
-      "description": "Detect AI-generated phrases and slop indicators"
-    },
-    {
-      "name": "remove_filler_words",
-      "endpoint": "/remove_filler_words",
-      "method": "POST",
-      "description": "Remove filler words like '', '', ''"
-    },
-    {
-      "name": "calculate_readability",
-      "endpoint": "/calculate_readability",
-      "method": "POST",
-      "description": "Calculate readability scores and metrics"
-    },
-    {
-      "name": "improve_content_from_slop",
-      "endpoint": "/improve_content_from_slop",
-      "method": "POST",
-      "description": "Rewrite text to remove slop and improve clarity"
-    }
-  ]
-}
-```
-
-## Git Repository Setup
-
-Initialize this as a separate git repository:
-
-```bash
-cd anti-slop-mcp
-git init
-git add .
-git commit -m "Initial commit: Anti-Slop MCP server"
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
+# Initialize
+echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0"}}}' | python server.py
+
+# List tools
+(echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0"}}}'; echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}') | python server.py
+
+# Call a tool
+cat << 'EOF' | python server.py
+{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0"}}}
+{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "detect_ai_phrases", "arguments": {"content": "Let me delve into this topic..."}}}
+EOF
 ```
 
 ## Development
 
-Run with auto-reload:
+The package is built with modern Python packaging standards:
+- `pyproject.toml` - Modern Python packaging configuration
+- `mcp` - Official Model Context Protocol Python SDK
+- `openai` - For AI-powered analysis and improvement tools
+- `pydantic` - For data validation
 
-```bash
-uvicorn server:app --reload --port 3000
-```
+## Architecture
 
-Run tests (add tests in `tests/` directory):
+This is a **stdio-based MCP server**, meaning:
+- It communicates via standard input/output (stdin/stdout)
+- It uses JSON-RPC 2.0 protocol
+- It's designed to be spawned as a subprocess by MCP clients
+- It's NOT a REST API or HTTP server
 
-```bash
-pytest
-```
+The old FastAPI version has been saved as `server_old.py` for reference.
 
 ## License
 
